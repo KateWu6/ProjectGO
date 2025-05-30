@@ -9,10 +9,9 @@ import (
 
 var db *sql.DB
 
-func initDB() {
-	connStr := "user=postgres password=1234 dbname=bd_go sslmode=disable"
+func InitDB() {
 	var err error
-	db, err = sql.Open("postgres", connStr)
+	db, err = sql.Open("postgres", "host=127.0.0.1 port=5432 user=postgres password=1234 dbname=db_go sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}

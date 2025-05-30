@@ -21,8 +21,8 @@ type User struct {
 
 type Achievement struct {
 	ID_acievement           int    `json:"id_acievement"`
-	Name_achievement        string `json:"name_acievement"`
-	Description_achievement string `json:"description_acievement"`
+	Achievement_name        string `json:"acievement_name"`
+	Achievement_description string `json:"acievement_description"`
 	ID_user                 int    `json:"id_user"`
 	Done                    bool   `json:"done"`
 }

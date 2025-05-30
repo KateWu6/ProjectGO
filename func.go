@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser User
 
 	// Декодируем JSON из тела запроса
@@ -49,7 +49,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newUser)
 }
 
-func getUser(w http.ResponseWriter, r *http.Request) {
+func GetUser(w http.ResponseWriter, r *http.Request) {
 	// Получаем параметр id из URL, например /user?id=123
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
@@ -87,7 +87,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func createTask(w http.ResponseWriter, r *http.Request) {
+func CreateTask(w http.ResponseWriter, r *http.Request) {
 	var newTask Task
 
 	// Чтение данных из тела запроса
@@ -120,7 +120,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTask)
 }
 
-func getTasksByUser(w http.ResponseWriter, r *http.Request) {
+func GetTasksByUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userIdStr := vars["userId"]
 
@@ -173,7 +173,7 @@ func getTasksByUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
-func updateTask(w http.ResponseWriter, r *http.Request) {
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 
@@ -239,7 +239,7 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent) // 204 No Content — обновление прошло успешно, тело не отправляем
 }
 
-func deleteTask(w http.ResponseWriter, r *http.Request) {
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 
