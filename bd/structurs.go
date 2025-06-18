@@ -1,4 +1,4 @@
-package main
+package bd
 
 type Task struct {
 	ID_task          int16  `json:"id_task"`
@@ -8,6 +8,8 @@ type Task struct {
 	Time             string `json:"time"`
 	Date             string `json:"date"`
 	Done             bool   `json:"done"`
+	Exp              int    `join:"exp"`
+	Energy           int    `join:"energy"`
 }
 
 type User struct {
