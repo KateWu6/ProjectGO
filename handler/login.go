@@ -1,60 +1,86 @@
 package handler
 
 import (
-	"Project/bd"
+	"Project/internal/my_check"
 	"database/sql"
+	"html/template"
+	"log"
 	"net/http"
+	"strings"
 
-	"github.com/google/uuid"
+	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var store = sessions.NewCookieStore([]byte("secret-key"))
+
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	db, err := bd.Connect()
-
-	if r.Method != "POST" {
-		http.ServeFile(w, r, "html_files/login.html")
-		return
-	}
-
-	// Извлекаем данные из POST-запроса
-	name := r.FormValue("name")
-	password := r.FormValue("password")
-
-	// Валидация полей
-	if len(name) == 0 || len(password) == 0 {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	// Проверяем, существует ли пользователь с такими данными
-	var storedHash []byte
-	err = db.QueryRow(`SELECT password_hash FROM users WHERE user_name=$1`, name).Scan(&storedHash)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+	if r.Method == "GET" {
+		tmpl, err := template.ParseFiles("templates/login.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, "Ошибка при поиске пользователя", http.StatusInternalServerError)
+		tmpl.Execute(w, nil)
 		return
 	}
 
-	// Проверяем пароль
-	err = bcrypt.CompareHashAndPassword(storedHash, []byte(password))
+	r.ParseForm()
+	username := strings.TrimSpace(r.FormValue("username"))
+	password := strings.TrimSpace(r.FormValue("password"))
+
+	// Проверяем существование пользователя
+	user, err := my_check.CheckUserExists(username)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Пользователь не найден"))
+			return
+		}
+		log.Println("Ошибка обращения к базе данных:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Авторизация прошла успешно, генерируем новый session_id
-	sessionID := uuid.NewString()
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Пользователь не найден"))
+		return
+	}
 
-	// Ставим сессию в браузер
-	http.SetCookie(w, &http.Cookie{
-		Name:  "session_id",
-		Value: sessionID,
-		Path:  "/",
-	})
+	// Проверяем введенный пароль против сохраненного хэша в базе данных
+	match, err := ComparePasswordWithHash(password, user.Password)
+	if err != nil || !match {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Неправильный пароль."))
+		return
+	}
+
+	// Проверили пароль, теперь запомним пользователя в сессии
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		log.Println("Ошибка получения сессии:", err)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	session.Values["username"] = username
+	err = session.Save(r, w)
+	if err != nil {
+		log.Println("Ошибка сохранения сессии:", err)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	// Авторизация успешна, перенаправляем на домашнюю страницу
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func ComparePasswordWithHash(password string, hashedPasswd []byte) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(hashedPasswd, []byte(password))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

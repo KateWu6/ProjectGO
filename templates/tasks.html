@@ -1,0 +1,234 @@
+{{ define "tasks" }}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <title>Задачи</title>
+    <style> 
+    body { 
+        font-family: 'Arial', sans-serif; 
+        background-color: #f4f4f4; 
+        color: #333; 
+        line-height: 1.6; 
+        margin: 0; padding: 
+        20px; 
+    } 
+    h1 { 
+        text-align: center; 
+        color: #333; 
+        font-weight: bold; 
+        margin-bottom: 20px; 
+    } 
+    .create-button { 
+        background-color: #808080; 
+        color: white; 
+        padding: 10px 20px; 
+        border: none; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        transition: background-color 0.3s ease-in-out; 
+    } 
+    .create-button:hover { 
+        background-color: #666; 
+    } 
+    .task-list { 
+        list-style-type: none; 
+        padding: 0; 
+        margin-top: 20px; 
+    } .task-item { 
+        background-color: #ffffff; 
+        border: 1px solid #ddd; 
+        margin-bottom: 10px; 
+        padding: 15px; 
+        border-radius: 5px; 
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        cursor: pointer; 
+    } 
+    .task-item.completed { 
+        background-color: #e6ffe6; 
+        border-color: #b3ffb3; 
+    } 
+    .task-checkbox { 
+        width: 20px; 
+        height: 20px; 
+        border: 1px solid #ccc; 
+        border-radius: 3px; 
+        cursor: pointer; 
+        display: inline-block; 
+        position: relative; 
+    } 
+    .task-checkbox.checked::after { 
+        content: ''; 
+        background-image: url('../img/check-mark.png'); 
+        background-position: center; 
+        background-repeat: no-repeat; 
+        background-size: contain; 
+        width: 20px; 
+        height: 20px; 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        right: 0; 
+        bottom: 0; 
+        display: block; 
+    } 
+    .task-deadline { 
+        font-size: 12px; 
+        color: #777; 
+        margin-left: 10px; 
+    } 
+    .task-exp, .task-energy { 
+        font-size: 14px; 
+        color: #555; 
+    } 
+    .task-description { 
+        display: none; 
+        margin-top: 10px; 
+        padding: 10px; 
+        border: 1px solid #ddd; 
+        background-color: #f9f9f9; 
+        border-radius: 4px; 
+    } 
+    .task-item.active .task-description { 
+        display: block; 
+    } 
+    /* Шапка */ 
+    header { 
+        background-color: #797979; 
+        padding: 10px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    } 
+    nav a { 
+        margin-right: 10px; 
+        text-decoration: none; 
+        color: #333; 
+        font-weight: bold; 
+    } 
+    nav a:hover { 
+        color: #007bff; 
+    } 
+    header > div { 
+        font-size: 14px; 
+        color: #555; 
+    } 
+    /* Изображения иконок */ 
+    img.icon { 
+        vertical-align: middle; 
+        margin-right: 5px; 
+    } 
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; align-items: center;">
+        <!-- Кнопка выхода -->
+        <form action="/logout" method="POST" style="margin: 0; margin-right: 10px;">
+            <button type="submit" style="
+                background-color: #333;
+                color: #fff;
+                border: none;
+                padding: 5px 10px;
+                cursor: pointer;
+                border-radius: 3px;">
+                Выйти
+            </button>
+        </form>
+        <nav>
+            <a href="/" {{if .IsProfile}}style="font-weight: bold;"{{end}}>Профиль</a> |
+            <a href="/tasks/" {{if .IsTasks}}style="font-weight: bold;"{{end}}>Задачи</a> |
+            <a href="/achievements/" {{if .IsAchievements}}style="font-weight: bold;"{{end}}>Достижения</a>
+        </nav>
+        </div>
+        <div>
+            <img src="../static/img/profile-user.png" alt="Иконка пользователя" class="icon" />
+            {{.ActiveUser}} |
+            <img src="../static/img/experience.png" alt="Уровень/Опыт" class="icon" /> {{.Level}} | {{.Exp}}/{{.ExpToNextLevel}} |
+            <img src="../static/img/energy.png" alt="Энергия" class="icon" /> {{.Energy}}/{{.EnergyUser}}
+        </div>
+    </header>
+    <h1>Мои задачи</h1>
+    <button id="createTaskBtn" style="background-color:#808080;color:white;padding:10px;margin-right:10px;">Создать задачу</button>
+    <script>
+        document.getElementById('createTaskBtn').addEventListener('click', () => {
+    window.location.href = '/tasks/create_task/';});
+    </script>
+
+    <ul class="task-list">
+        {{range .GroupedTasks}}
+        <li class="task-day-container">
+        <h2>{{.Date}}</h2>
+        <!-- Внутренний цикл для каждой группы задач -->
+        {{range .Tasks}}
+        <li class="task-item {{if .Done}}completed{{end}}" onclick="toggleDescription(this)">
+            <div>
+                <strong>{{.Task_name}}</strong>
+                <span class="task-deadline">Срок: {{formatDate .Date}} {{formatTime .Time}}</span>
+            </div>
+        
+            <div>
+                <span class="task-exp"><img src="../img/experience.png" alt="Опыт" class="icon"/> {{.Exp}}</span>
+                <span class="task-energy"><img src="../img/energy.png" alt="Энергия" class="icon" /> {{.Energy}}</span>
+            <div class="task-checkbox {{if .Done}}checked{{end}}" data-task-id="{{.ID_task}}" onclick="markAsComplete(event, this)"></div>
+        </div>
+    
+        <div class="task-description">
+            <strong>Описание:</strong>
+            <p>{{.Task_description}}</p>
+        </div>
+        </li>
+        {{end}}
+        </li>
+    {{end}}
+    </ul>
+
+    <script>
+        function toggleDescription(taskItem) {
+            // Закрываем все активные описания
+            let descriptions = document.querySelectorAll('.task-description');
+            descriptions.forEach(desc => {
+                if (desc.parentElement !== taskItem) {
+                    desc.style.display = 'none';
+                }
+            });
+            
+            // Переключаем отображение текущего описания
+            let desc = taskItem.querySelector('.task-description');
+            desc.style.display = desc.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function markAsComplete(event, checkbox) {
+            event.stopPropagation(); // Останавливаем всплытие события клика
+            const taskId = checkbox.getAttribute('data-task-id');
+            fetch(`/tasks/${taskId}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(() => {
+                    checkbox.classList.toggle('checked');
+                    let taskItem = checkbox.closest('.task-item');
+                    if (taskItem) {
+                        taskItem.classList.add('completed');
+                    }
+                })
+                .catch(error => console.error('Ошибка:', error));
+        }
+    </script>
+</body>
+
+</html>
+{{ end }}
