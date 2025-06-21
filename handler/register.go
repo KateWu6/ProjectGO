@@ -45,7 +45,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost) //хэширование
 	if err != nil {
 		log.Println("Ошибка хэширования пароля:", err)
 		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)

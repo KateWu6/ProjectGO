@@ -51,7 +51,6 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаем структуру PageData и передаем данные пользователя
 	expToNextLevel := services.GetExpForLevel(user.Lvl + 1)
 
 	data := models.CreateTaskPageData{

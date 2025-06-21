@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// функция для добавления/убавления опыта/энергии
 func UpdateUserExpAndEnergy(db *sql.DB, userId uint16, taskExp int, taskEnergy int) error {
 	// 1. Получаем текущие значения пользователя
 	var currentExp int
@@ -19,7 +20,7 @@ func UpdateUserExpAndEnergy(db *sql.DB, userId uint16, taskExp int, taskEnergy i
 	newExp := currentExp + taskExp
 	newEnergy := currentEnergy - taskEnergy
 
-	// Убедимся, что энергия не ушла в минус
+	// Убедимся, что энергия не ушла в минус - в будущем поменять
 	if newEnergy < 0 {
 		newEnergy = 0
 	}

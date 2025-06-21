@@ -12,7 +12,7 @@ func GroupTasksByDay(tasks []models.Task) []models.DayGroup {
 		groups[dateKey] = append(groups[dateKey], task)
 	}
 
-	result := make([]models.DayGroup, 0, len(groups))
+	result := make([]models.DayGroup, 0, len(groups)) //срез
 	for date, groupedTasks := range groups {
 		result = append(result, models.DayGroup{Date: date, Tasks: groupedTasks})
 	}

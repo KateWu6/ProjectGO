@@ -5,7 +5,6 @@ import (
 	"Project/internal/database"
 	"Project/internal/services"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -14,13 +13,10 @@ import (
 )
 
 func main() {
-	router := mux.NewRouter()
+	router := mux.NewRouter() //создание нового роутера
 
+	//регистрация обработчиков маршрутов
 	router.HandleFunc("/", handler.ProfilePage).Methods("GET")
-
-	fs := http.FileServer(http.Dir("templates"))
-	log.Println("Обслуживаем статические файлы из templates")
-	router.PathPrefix("/img/").Handler(http.StripPrefix("/img/", fs))
 
 	router.HandleFunc("/login", handler.LoginHandler)
 	router.HandleFunc("/register", handler.RegisterHandler)
@@ -28,22 +24,23 @@ func main() {
 
 	router.HandleFunc("/tasks/", handler.GetUserTasks)
 	router.HandleFunc("/achievements/", handler.GetUserAchievement)
-
+	//маршрут для создания новой задачи
 	router.HandleFunc("/tasks/create_task/", handler.CreateTask)
-
+	//маршрут обрабатывающий завершение задачи с идентификатором {id}
 	router.HandleFunc("/tasks/{id}/complete", handler.CompleteTaskHandler).Methods("POST")
 
+	//запуск фоновой функции (востановление энергии каждый день)
 	go func() {
 		for {
-			// Получаем список всех user_id из базы данных.
+			// Получение списка всех user_id из базы данных
 			db, err := database.Connect()
 			if err != nil {
 				fmt.Println("Ошибка подключения к базе данных:", err)
 				time.Sleep(24 * time.Hour) // Повторная попытка через 24 часа
 				continue
 			}
-
-			rows, err := db.Query("SELECT id_user FROM users")
+			//получение списка всех id из таблицы users
+			rows, err := db.Query("SELECT id_user FROM users") //итерация по результатам запроса
 			if err != nil {
 				fmt.Println("Ошибка получения списка пользователей:", err)
 				db.Close()
@@ -52,7 +49,8 @@ func main() {
 			}
 			defer rows.Close()
 
-			var userIDs []uint16
+			var userIDs []uint16 //массив идентификаторов пользователей
+			//извлечение результатов запроса в цикле
 			for rows.Next() {
 				var userID uint16
 				if err := rows.Scan(&userID); err != nil {
@@ -63,15 +61,16 @@ func main() {
 			}
 			db.Close()
 
-			now := time.Now()
+			now := time.Now() //текущая дата
+			//определение ближайшего к полуночи времени
 			midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-			nextMidnight := midnight.Add(24 * time.Hour)
-			durationUntilMidnight := nextMidnight.Sub(now)
+			nextMidnight := midnight.Add(24 * time.Hour)   //Время следующей полуночи
+			durationUntilMidnight := nextMidnight.Sub(now) //рассчет времени до следующей полуночи
 
-			time.Sleep(durationUntilMidnight)
-
+			time.Sleep(durationUntilMidnight) //"засыпание" программы на указанное время
+			//восстановление энергии пользователям
 			for _, userID := range userIDs {
-				if err := services.ReplenishEnergy(userID); err != nil { // Вызов через имя пакета
+				if err := services.ReplenishEnergy(userID); err != nil {
 					fmt.Printf("Ошибка пополнения энергии для пользователя %d: %v\n", userID, err)
 				} else {
 					fmt.Printf("Энергия успешно пополнена для пользователя %d\n", userID)
@@ -82,5 +81,5 @@ func main() {
 		}
 	}()
 
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe(":8080", router) //вызов функции запуска сервера
 }

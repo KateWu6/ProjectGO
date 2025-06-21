@@ -21,7 +21,7 @@ func ReplenishEnergy(userID uint16) error {
 	if err != nil {
 		return err
 	}
-
+	//поменять потом
 	if currentEnergy < EnergyReplenish {
 		newEnergy := EnergyReplenish
 		if newEnergy > MaxEnergy {

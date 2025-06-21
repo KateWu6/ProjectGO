@@ -8,10 +8,10 @@ import (
 // Тип для сортировки задач
 type Tasks []models.Task
 
-func (t Tasks) Len() int      { return len(t) }
-func (t Tasks) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
+func (t Tasks) Len() int      { return len(t) }           //возвращает длину
+func (t Tasks) Swap(i, j int) { t[i], t[j] = t[j], t[i] } //меняет местами элементы по индексу
 
-func (t Tasks) Less(i, j int) bool {
+func (t Tasks) Less(i, j int) bool { //сравнение
 	// Проверка наличия действительных значений даты и времени
 	if !t[i].Date.IsZero() && !t[i].Time.IsZero() &&
 		!t[j].Date.IsZero() && !t[j].Time.IsZero() {
